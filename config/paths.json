@@ -1,0 +1,6 @@
+{
+  "lunch_pool": "data/lunch.json",
+  "draws": "data/draws.jsonl",
+  "bili_zones": "data/bili_zones.json",
+  "bili_home": null
+}

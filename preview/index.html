@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>抽卡</title>
+  <style>
+    :root {
+      --ink: #1c1915;
+      --paper: #f4ecd9;
+      --night: #10140f;
+      --panel: #243028;
+      --gold: #f0c14a;
+      --line: #0c0d12;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; }
+    body {
+      color: var(--paper);
+      font-family: "Microsoft YaHei UI", "PingFang SC", "Noto Sans SC", sans-serif;
+      background:
+        radial-gradient(ellipse at 50% 20%, rgba(240, 193, 74, 0.08), transparent 42%),
+        linear-gradient(180deg, #1a221c, #10140f 40%);
+    }
+    button { font: inherit; color: inherit; }
+    button:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
+    main {
+      width: min(1120px, calc(100% - 28px));
+      margin: 0 auto;
+      padding: 32px 0 48px;
+    }
+    .eyebrow {
+      margin: 0 0 8px;
+      letter-spacing: 0.32em;
+      font-size: 12px;
+      color: var(--gold);
+    }
+    h1 { margin: 0 0 8px; font-size: 36px; letter-spacing: 0.04em; }
+    #lead { margin: 0 0 22px; max-width: 640px; line-height: 1.6; color: #d9d0bb; }
+    .note { margin: 22px 0 0; color: #8f8878; font-size: 13px; }
+    .choices, .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      justify-content: center;
+    }
+    .choice, .chip, .solid, .texty {
+      border: 4px solid var(--line);
+      cursor: pointer;
+    }
+    .choice, .chip {
+      min-width: 180px;
+      padding: 18px 16px;
+      background: var(--panel);
+      box-shadow: 6px 6px 0 var(--line);
+      text-align: left;
+    }
+    .choice strong, .chip strong { display: block; font-size: 22px; }
+    .choice span, .chip small { display: block; margin-top: 6px; color: var(--gold); font-size: 13px; }
+    .chip.is-ready { box-shadow: 6px 6px 0 var(--line), inset 0 0 0 2px var(--gold); }
+    .chip:disabled { opacity: 0.45; cursor: not-allowed; box-shadow: 6px 6px 0 #2a2418; }
+    .solid, .texty { padding: 10px 16px; background: transparent; }
+    .solid { background: var(--gold); color: var(--ink); font-weight: 700; box-shadow: 4px 4px 0 var(--line); }
+    .texty { color: var(--paper); margin-top: 16px; }
+    .actions { margin-top: 16px; }
+    .empty, .loading { text-align: center; line-height: 1.6; }
+    .table {
+      position: relative;
+      min-height: 800px;
+      background:
+        radial-gradient(ellipse at center, rgba(90, 40, 24, 0.35), transparent 58%),
+        radial-gradient(ellipse at center, #1d4630 0%, #0e1a14 72%);
+      border: 4px solid var(--line);
+      box-shadow: inset 0 0 0 4px #c8a15a, 8px 8px 0 var(--line);
+      overflow: hidden;
+    }
+    .pack {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 210px;
+      height: 300px;
+      margin: -150px 0 0 -105px;
+      padding: 0;
+      cursor: pointer;
+      border: none;
+      color: var(--paper);
+      background: linear-gradient(160deg, #a13b2c 0%, #6d221c 46%, #3c1214 100%);
+      box-shadow: 0 16px 0 #07110c, inset 0 0 0 6px var(--gold), inset 0 0 0 12px #6d221c;
+      animation: idle 2.4s ease-in-out infinite;
+    }
+    .pack.is-video {
+      background: linear-gradient(160deg, #2a6cb5 0%, #17345c 48%, #0d1c33 100%);
+      box-shadow: 0 16px 0 #07110c, inset 0 0 0 6px #8ec8ff, inset 0 0 0 12px #17345c;
+    }
+    .pack.is-shaking { animation: shake 0.5s linear; }
+    .pack.is-gone { animation: burst 0.4s ease-in forwards; pointer-events: none; }
+    .ribbon {
+      position: absolute;
+      top: 36px;
+      left: -8px;
+      right: -8px;
+      background: var(--gold);
+      color: var(--ink);
+      letter-spacing: 0.28em;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 6px 0;
+    }
+    .pack b { display: block; margin-top: 92px; font-size: 76px; line-height: 1; }
+    .pack-name { display: block; margin-top: 8px; font-size: 18px; }
+    .hint {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 22px;
+      margin: 0;
+      text-align: center;
+      letter-spacing: 0.24em;
+      color: var(--gold);
+    }
+    .burst {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 36px;
+      height: 36px;
+      margin: -18px 0 0 -18px;
+      border: 6px solid var(--gold);
+      border-radius: 50%;
+      opacity: 0;
+      pointer-events: none;
+    }
+    .burst.is-on { animation: ring 0.65s ease-out; }
+    .flash {
+      position: fixed;
+      inset: 0;
+      background: #fff8e8;
+      opacity: 0;
+      pointer-events: none;
+    }
+    .flash.is-on { animation: flash 0.45s ease-out; }
+    .fan {
+      position: absolute;
+      inset: 0;
+      --orbit: 220px;
+    }
+    .card {
+      --x: 0;
+      --y: 0;
+      --tilt: 0deg;
+      --glow: #ffd15c;
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 150px;
+      height: 236px;
+      margin: -118px 0 0 -75px;
+      padding: 0;
+      border: none;
+      background: none;
+      cursor: pointer;
+      perspective: 900px;
+      transform: translate(calc(var(--x) * var(--orbit)), calc(var(--y) * var(--orbit))) rotate(var(--tilt));
+      animation: deal 0.72s cubic-bezier(.16, .84, .32, 1) both;
+      animation-delay: calc(var(--i) * 80ms);
+    }
+    .inner {
+      display: block;
+      position: relative;
+      width: 100%;
+      height: 100%;
+      transform-style: preserve-3d;
+      transition: transform 0.55s cubic-bezier(.2, .8, .2, 1);
+    }
+    .card:hover { z-index: 4; }
+    .card.is-open,
+    .card.is-open:hover { z-index: 8; }
+    .card:hover .back,
+    .card:hover .front {
+      box-shadow:
+        inset 0 0 18px var(--glow),
+        0 0 12px var(--glow),
+        0 0 28px var(--glow);
+    }
+    .card.rarity-legendary:hover .back,
+    .card.rarity-legendary:hover .front {
+      box-shadow:
+        inset 0 0 22px var(--glow),
+        0 0 16px var(--glow),
+        0 0 40px var(--glow);
+    }
+    .card.is-open .inner { transform: rotateY(180deg); }
+    .side {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 14px;
+      border: 4px solid var(--line);
+      backface-visibility: hidden;
+      overflow: hidden;
+    }
+    .back { background: #8d2f24; color: var(--paper); }
+    .deck-video .back { background: #1d4e89; }
+    .back b { font-size: 64px; line-height: 1; }
+    .front {
+      background: var(--paper);
+      color: var(--ink);
+      transform: rotateY(180deg);
+      align-items: stretch;
+      justify-content: flex-start;
+      padding: 0;
+      gap: 0;
+    }
+    .face {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 4px;
+      width: 100%;
+      height: 100%;
+      min-height: 0;
+      padding: 10px 10px 12px;
+      overflow: hidden;
+      text-align: left;
+      overflow-wrap: break-word;
+    }
+    .kicker, .front h2, .line, .reason, .link { flex-shrink: 0; }
+    .kicker { color: #8a5a18; font-size: 12px; letter-spacing: 0.08em; line-height: 1.2; }
+    .front h2 {
+      margin: 0;
+      font-size: 16px;
+      line-height: 1.25;
+      max-height: calc(1.25em * 2);
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .line, .reason { margin: 0; font-size: 12px; line-height: 1.35; }
+    .reason {
+      color: #3d3830;
+      max-height: calc(1.35em * 2);
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .link {
+      color: #1a4f8b;
+      font-size: 12px;
+      line-height: 1.3;
+      text-decoration: underline;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .badge {
+      align-self: flex-start;
+      background: var(--ink);
+      color: var(--gold);
+      font-size: 12px;
+      padding: 3px 6px;
+    }
+    .card.rarity-legendary.is-open .front {
+      box-shadow: inset 0 0 0 4px var(--gold), 0 0 26px rgba(240, 193, 74, 0.9);
+    }
+    .card.rarity-rare.is-open .front {
+      box-shadow: inset 0 0 0 4px #6cb6ff, 0 0 18px rgba(108, 182, 255, 0.8);
+    }
+    .card.rarity-legendary.is-open .front::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(115deg, transparent 30%, rgba(255, 255, 255, 0.55) 50%, transparent 70%);
+      transform: translateX(-120%);
+      animation: shine 0.8s ease-out;
+    }
+    @keyframes idle {
+      0%, 100% { transform: translateY(0) rotate(-2deg); }
+      50% { transform: translateY(-12px) rotate(2deg); }
+    }
+    @keyframes shake {
+      0% { transform: rotate(0) scale(1); }
+      20% { transform: rotate(-8deg) scale(1.04); }
+      40% { transform: rotate(8deg) scale(1.08); }
+      60% { transform: rotate(-6deg) scale(1.12); }
+      80% { transform: rotate(5deg) scale(1.16); }
+      100% { transform: rotate(0) scale(1.2); }
+    }
+    @keyframes burst {
+      to { transform: translateY(-46px) scale(1.4); opacity: 0; }
+    }
+    @keyframes ring {
+      from { transform: scale(1); opacity: 1; }
+      to { transform: scale(16); opacity: 0; }
+    }
+    @keyframes flash {
+      0% { opacity: 0.85; }
+      100% { opacity: 0; }
+    }
+    @keyframes deal {
+      from { transform: translate(0px, 0px) scale(0.18) rotate(0deg); opacity: 0; }
+      to { transform: translate(calc(var(--x) * var(--orbit)), calc(var(--y) * var(--orbit))) rotate(var(--tilt)) scale(1); opacity: 1; }
+    }
+    @keyframes shine {
+      to { transform: translateX(120%); }
+    }
+    @media (max-width: 980px) {
+      h1 { font-size: 28px; }
+      .table { min-height: 560px; }
+      .fan { --orbit: 112px; }
+      .card {
+        width: 88px;
+        height: 138px;
+        margin: -69px 0 0 -44px;
+      }
+      .back b { font-size: 40px; }
+      .face { padding: 6px 6px 7px; gap: 2px; }
+      .kicker, .link { font-size: 10px; }
+      .front h2 { font-size: 12px; }
+      .line, .reason { font-size: 10px; }
+      .line:nth-of-type(n+2) { display: none; }
+      .reason { -webkit-line-clamp: 2; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .pack, .card, .inner, .flash, .burst, .front::after {
+        animation: none !important;
+        transition: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="flash" id="flash"></div>
+  <main>
+    <p class="eyebrow">CHOUKA</p>
+    <h1 id="title">先选一副牌</h1>
+    <p id="lead">午饭选类型，视频选区。选完开一包，一共 5 张。</p>
+    <section id="stage"></section>
+    <p class="note">不会打开视频，也不会下单。抽完如果照做了，回到命令行 mark 那一次。</p>
+  </main>
+  <script id="chouka-data" type="application/json">
+{
+  "source": "draw",
+  "draw_id": "d974292e2432e",
+  "deck": "bili_featured",
+  "drawn_at": "2026-11-06T20:51:15+08:00",
+  "category": "AI编程",
+  "cards": [
+    {
+      "id": "BV1EzJf6JE9U",
+      "title": "如何长期稳定使用Claude订阅，原理+实操教学",
+      "reason": "抽到「如何长期稳定使用Claude订阅，原理+实操教学」。你选了「AI编程」这个区，所以只从这里面抽。UP 是技术爬爬虾。2026-10-26…",
+      "url": "https://www.bilibili.com/video/BV1EzJf6JE9U",
+      "watch_variant": null,
+      "kicker": "精选",
+      "rarity": "rare",
+      "lines": [
+        "技术爬爬虾",
+        "时长 5 分钟",
+        "可以看"
+      ]
+    },
+    {
+      "id": "BV1HJno6EEDT",
+      "title": "我把电脑上的 AI 编程工具，装进了手机【B站AI创造公开赛】",
+      "reason": "抽到「我把电脑上的 AI 编程工具，装进了手机【B站AI创造公开赛】」。你选了「AI编程」这个区，所以只从这里面抽。UP 是兔子Jarvis。…",
+      "url": "https://www.bilibili.com/video/BV1HJno6EEDT",
+      "watch_variant": null,
+      "kicker": "精选",
+      "rarity": "rare",
+      "lines": [
+        "兔子Jarvis",
+        "时长 1 分半",
+        "可以看"
+      ]
+    },
+    {
+      "id": "BV1DTnS6VESr",
+      "title": "8.9 万 Star！我给 AI 做了个画图技能，现在连回答都…",
+      "reason": "抽到「8.9 万 Star！我给 AI 做了个画图技能，现在连回答都能变成网页了」。你选了「AI编程」这个区，所以只从这里面抽。UP 是也无风…",
+      "url": "https://www.bilibili.com/video/BV1DTnS6VESr",
+      "watch_variant": null,
+      "kicker": "精选",
+      "rarity": "rare",
+      "lines": [
+        "也无风雨也雾晴",
+        "时长 3 分半",
+        "可以看"
+      ]
+    },
+    {
+      "id": "BV154426xEha",
+      "title": "我的 AI 编程全流程：如何使用 AI 稳定交付一个高质量的产品",
+      "reason": "抽到「我的 AI 编程全流程：如何使用 AI 稳定交付一个高质量的产品」。你选了「AI编程」这个区，所以只从这里面抽。UP 是马克的技术工作坊…",
+      "url": "https://www.bilibili.com/video/BV154426xEha",
+      "watch_variant": null,
+      "kicker": "精选",
+      "rarity": "legendary",
+      "lines": [
+        "马克的技术工作坊",
+        "时长 未知",
+        "值得看"
+      ]
+    },
+    {
+      "id": "BV1PznU6YEZE",
+      "title": "如何审核 AI 写的代码？从写代码到上线，一套保证产品质量的全…",
+      "reason": "抽到「如何审核 AI 写的代码？从写代码到上线，一套保证产品质量的全流程」。你选了「AI编程」这个区，所以只从这里面抽。UP 是马克的技术工作…",
+      "url": "https://www.bilibili.com/video/BV1PznU6YEZE",
+      "watch_variant": null,
+      "kicker": "精选",
+      "rarity": "legendary",
+      "lines": [
+        "马克的技术工作坊",
+        "时长 未知",
+        "值得看"
+      ]
+    }
+  ]
+}
+</script>
+  <script>
+    const state = { live: false, deck: null, category: null, busy: false, drawId: "" };
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const title = document.getElementById("title");
+    const lead = document.getElementById("lead");
+    const stage = document.getElementById("stage");
+    const flash = document.getElementById("flash");
+
+    function wait(ms) {
+      if (reduced || ms <= 0) return Promise.resolve();
+      return new Promise((resolve) => window.setTimeout(resolve, ms));
+    }
+
+    function el(tag, className, text) {
+      const node = document.createElement(tag);
+      if (className) node.className = className;
+      if (text != null) node.textContent = text;
+      return node;
+    }
+
+    function loadData() {
+      const node = document.getElementById("chouka-data");
+      try {
+        const data = JSON.parse(node.textContent);
+        if (data && Array.isArray(data.cards) && data.cards.length) return data;
+      } catch (err) { /* 用下面的空包提示 */ }
+      return { source: "demo", deck: "lunch", category: null, cards: [] };
+    }
+
+    function showMessage(text, back) {
+      stage.replaceChildren(el("p", "empty", text));
+      const button = el("button", "texty", "返回");
+      button.type = "button";
+      button.addEventListener("click", back);
+      stage.append(button);
+    }
+
+    function showDecks() {
+      state.deck = null;
+      state.category = null;
+      state.drawId = "";
+      title.textContent = "先选一副牌";
+      lead.textContent = "午饭选类型，视频选区。选完开一包，一共 5 张。";
+      const row = el("div", "choices");
+      [
+        ["lunch", "午饭", "先选类型，再从里面抽"],
+        ["bili_featured", "精选视频", "先选区，再从里面抽"]
+      ].forEach((item) => {
+        const button = el("button", "choice");
+        button.type = "button";
+        button.append(el("strong", null, item[1]), el("span", null, item[2]));
+        button.addEventListener("click", () => showCategories(item[0]));
+        row.append(button);
+      });
+      stage.replaceChildren(row);
+    }
+
+    async function showCategories(deck) {
+      state.deck = deck;
+      state.category = null;
+      const lunch = deck === "lunch";
+      title.textContent = lunch ? "想吃哪种？" : "想看哪个区？";
+      lead.textContent = lunch
+        ? "只从你点的这一类里抽。不够 5 张的类型点不了，也不会拿别的类型来凑。"
+        : "只从你点的这个区里抽。区是按标题和精选理由里的关键词归的，一条视频可以同时在多个区。";
+      stage.replaceChildren(el("p", "loading", "正在看卡池…"));
+      let data;
+      try {
+        const res = await fetch("/api/categories?deck=" + encodeURIComponent(deck));
+        data = await res.json();
+        if (!res.ok) throw new Error(data.error || "读不到分类");
+      } catch (err) {
+        showMessage(err.message || "读不到分类", showDecks);
+        return;
+      }
+      if (state.deck !== deck) return;
+      if (!data.categories.length) {
+        const empty = lunch ? "卡池里还没有标签。去改 data/lunch.json。" : "还没有分区。去改 data/bili_zones.json 里的关键词。";
+        stage.replaceChildren(el("p", "empty", empty));
+      } else {
+        const row = el("div", "choices");
+        data.categories.forEach((item) => {
+          const button = el("button", "chip" + (item.ready ? " is-ready" : ""));
+          button.type = "button";
+          button.disabled = !item.ready;
+          const detail = item.ready ? (item.count + " 张 · 可以开包") : (item.count + " 张 · 还差 " + item.short + " 张");
+          button.append(el("strong", null, item.name), el("small", null, detail));
+          button.addEventListener("click", () => showPack(item));
+          row.append(button);
+        });
+        stage.replaceChildren(row);
+      }
+      const back = el("button", "texty", "换一副牌");
+      back.type = "button";
+      back.addEventListener("click", showDecks);
+      stage.append(back);
+    }
+
+    function showPack(category) {
+      state.category = category;
+      const lunch = state.deck !== "bili_featured";
+      title.textContent = (lunch ? "午饭" : "精选视频") + " · " + category.name;
+      lead.textContent = "点击卡包。五张牌背面朝上，落到五角星的五个尖上。鼠标移上去会发光，点一下才翻开。";
+      const table = el("div", "table");
+      const burst = el("div", "burst");
+      const pack = el("button", "pack" + (lunch ? "" : " is-video"));
+      pack.type = "button";
+      pack.append(el("span", "ribbon", "PACK"), el("b", null, "抽"), el("span", "pack-name", category.name));
+      const hint = el("p", "hint", "点击卡包");
+      table.append(burst, pack, hint);
+      stage.replaceChildren(table);
+      const back = el("button", "texty", lunch ? "换一个类型" : "换一个区");
+      back.type = "button";
+      back.addEventListener("click", () => {
+        if (state.live) showCategories(state.deck);
+        else showOffline();
+      });
+      stage.append(back);
+      pack.addEventListener("click", () => openPack(table, pack, burst, hint));
+    }
+
+    async function openPack(table, pack, burst, hint) {
+      if (state.busy) return;
+      state.busy = true;
+      pack.disabled = true;
+      pack.classList.add("is-shaking");
+      let data;
+      try {
+        const pending = state.live ? postDraw(state.deck, state.category.id) : Promise.resolve(loadData());
+        data = (await Promise.all([pending, wait(520)]))[0];
+      } catch (err) {
+        state.busy = false;
+        pack.classList.remove("is-shaking");
+        pack.disabled = false;
+        showMessage(err.message || "开包失败", () => showPack(state.category));
+        return;
+      }
+      if (!data.cards || !data.cards.length) {
+        state.busy = false;
+        showMessage("这一包是空的。", () => showPack(state.category));
+        return;
+      }
+      pack.classList.remove("is-shaking");
+      pack.classList.add("is-gone");
+      burst.classList.add("is-on");
+      flash.classList.remove("is-on");
+      void flash.offsetWidth;
+      flash.classList.add("is-on");
+      hint.remove();
+      await wait(220);
+      table.append(renderFan(data));
+      await wait(reduced ? 0 : 760);
+      state.busy = false;
+      stage.querySelectorAll(":scope > .texty").forEach((node) => node.remove());
+      state.drawId = data.draw_id || "";
+      if (state.drawId) lead.textContent = "这一包是 " + state.drawId + "。鼠标移上去看光芒，点一下翻开。";
+      const actions = el("div", "actions");
+      const again = el("button", "solid", "再开一包");
+      again.type = "button";
+      again.addEventListener("click", () => showPack(state.category));
+      const swap = el("button", "texty", state.deck === "bili_featured" ? "换一个区" : "换一个类型");
+      swap.type = "button";
+      swap.addEventListener("click", () => state.live ? showCategories(state.deck) : showOffline());
+      actions.append(again, swap);
+      stage.append(actions);
+    }
+
+    async function postDraw(deck, category) {
+      const res = await fetch("/api/draw", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ deck: deck, category: category })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "开包失败");
+      return data;
+    }
+
+    function renderFan(data) {
+      const fan = el("div", "fan " + (data.deck === "bili_featured" ? "deck-video" : "deck-lunch"));
+      const tilts = ["0deg", "16deg", "8deg", "-8deg", "-16deg"];
+      data.cards.forEach((card, index) => {
+        const point = starPoint(index);
+        const button = el("div", "card rarity-" + (card.rarity || "common"));
+        button.tabIndex = 0;
+        button.style.setProperty("--i", String(index));
+        button.style.setProperty("--x", point.x);
+        button.style.setProperty("--y", point.y);
+        button.style.setProperty("--tilt", tilts[index] || "0deg");
+        button.style.setProperty("--glow", glowFor(card, index));
+        button.title = card.reason || "";
+        button.addEventListener("click", () => {
+          if (state.busy) return;
+          button.classList.toggle("is-open");
+        });
+        const inner = el("span", "inner");
+        const back = el("span", "side back");
+        back.append(el("span", null, card.kicker || ""), el("b", null, "抽"));
+        const front = el("span", "side front");
+        const face = el("span", "face");
+        face.append(el("span", "kicker", card.kicker || ""), el("h2", null, card.title || ""));
+        (card.lines || []).forEach((line) => face.append(el("p", "line", line)));
+        face.append(el("p", "reason", card.reason || ""));
+        if (card.url) face.append(videoLink(card.url));
+        front.append(face);
+        inner.append(back, front);
+        button.append(inner);
+        fan.append(button);
+      });
+      return fan;
+    }
+
+    function videoLink(url) {
+      const link = document.createElement("a");
+      link.className = "link";
+      link.href = url;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      const bvid = String(url).match(/BV[0-9A-Za-z]+/);
+      link.textContent = bvid ? bvid[0] : "打开视频";
+      link.title = url;
+      link.addEventListener("click", (event) => event.stopPropagation());
+      return link;
+    }
+
+    function starPoint(index) {
+      const angle = -Math.PI / 2 + index * (2 * Math.PI / 5);
+      return {
+        x: Math.cos(angle).toFixed(4),
+        y: Math.sin(angle).toFixed(4),
+      };
+    }
+
+    function glowFor(card, index) {
+      if (card.rarity === "legendary") return "#ffd15c";
+      return ["#5dff9a", "#ff8d7a", "#6ecbff", "#d9a6ff", "#7dfff0"][index % 5];
+    }
+
+    function showOffline() {
+      title.textContent = "先选类型再开包";
+      lead.textContent = "这个文件自己问不了卡池。在仓库里运行 python -m chouka preview，用它打印的地址打开。";
+      const saved = loadData();
+      const button = el("button", "solid", saved.cards.length ? "先看上一包怎么开" : "还没有上一包");
+      button.type = "button";
+      button.disabled = !saved.cards.length;
+      button.addEventListener("click", () => {
+        state.deck = saved.deck || "lunch";
+        showPack({ id: "saved", name: saved.category || "上一包" });
+      });
+      stage.replaceChildren(button);
+    }
+
+    async function boot() {
+      try {
+        const res = await fetch("/api/categories?deck=lunch");
+        await res.json();
+        state.live = true;
+      } catch (err) {
+        state.live = false;
+      }
+      if (state.live) showDecks();
+      else showOffline();
+    }
+
+    boot();
+  </script>
+</body>
+</html>

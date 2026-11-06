@@ -1,0 +1,104 @@
+{
+  "readme": "午饭卡池只认这一份文件。把 name、tags、notes、budget、walk_minutes 改成你自己的；不想被抽到就设 enabled 为 false。程序不会编餐厅，也不会补条目。",
+  "items": [
+    {
+      "id": "tomato-egg-noodle",
+      "name": "番茄鸡蛋面",
+      "tags": ["清淡", "面"],
+      "notes": "示例：请改成你自己的午饭。程序不会补餐厅。",
+      "budget": 18,
+      "walk_minutes": 5,
+      "enabled": true
+    },
+    {
+      "id": "veggie-rice",
+      "name": "清炒时蔬盖饭",
+      "tags": ["清淡", "蔬菜"],
+      "notes": "示例：请改成你自己的午饭。程序不会补餐厅。",
+      "budget": 22,
+      "walk_minutes": 8,
+      "enabled": true
+    },
+    {
+      "id": "chicken-salad",
+      "name": "鸡胸肉沙拉",
+      "tags": ["清淡"],
+      "notes": "示例：请改成你自己的午饭。程序不会补餐厅。",
+      "budget": 28,
+      "walk_minutes": 12,
+      "enabled": true
+    },
+    {
+      "id": "tofu-soup",
+      "name": "豆腐蔬菜汤",
+      "tags": ["清淡", "素", "蔬菜"],
+      "notes": "示例：请改成你自己的午饭。程序不会补餐厅。",
+      "budget": 16,
+      "walk_minutes": 0,
+      "enabled": true
+    },
+    {
+      "id": "beef-noodle",
+      "name": "牛肉面",
+      "tags": ["荤"],
+      "notes": "示例：请改成你自己的午饭。程序不会补餐厅。",
+      "budget": 32,
+      "walk_minutes": 10,
+      "enabled": true
+    },
+    {
+      "id": "fried-chicken",
+      "name": "炸鸡饭",
+      "tags": ["荤", "重口"],
+      "notes": "示例：请改成你自己的午饭。程序不会补餐厅。",
+      "budget": 36,
+      "walk_minutes": 6,
+      "enabled": true
+    },
+    {
+      "id": "mala-pot",
+      "name": "麻辣香锅",
+      "tags": ["荤", "重口"],
+      "notes": "示例：请改成你自己的午饭。程序不会补餐厅。",
+      "budget": 40,
+      "walk_minutes": 15,
+      "enabled": true
+    },
+    {
+      "id": "pork-dumplings",
+      "name": "猪肉白菜饺子",
+      "tags": ["荤"],
+      "notes": "示例：请改成你自己的午饭。程序不会补餐厅。",
+      "budget": 24,
+      "walk_minutes": 3,
+      "enabled": true
+    },
+    {
+      "id": "greens-noodle",
+      "name": "青菜鸡蛋面",
+      "tags": ["清淡", "面"],
+      "notes": "示例：请改成你自己的午饭。程序不会补餐厅。",
+      "budget": 18,
+      "walk_minutes": 6,
+      "enabled": true
+    },
+    {
+      "id": "cucumber-rice",
+      "name": "黄瓜鸡蛋拌饭",
+      "tags": ["清淡", "蔬菜"],
+      "notes": "示例：请改成你自己的午饭。程序不会补餐厅。",
+      "budget": 20,
+      "walk_minutes": 4,
+      "enabled": true
+    },
+    {
+      "id": "braised-pork",
+      "name": "卤肉饭",
+      "tags": ["荤"],
+      "notes": "示例：请改成你自己的午饭。程序不会补餐厅。",
+      "budget": 26,
+      "walk_minutes": 8,
+      "enabled": true
+    }
+  ]
+}

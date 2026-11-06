@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "chouka"
+version = "0.1.0"
+description = "本地抽卡引擎：同一套规则，午饭和精选视频两副牌。"
+requires-python = ">=3.10"
+readme = "README.md"
+
+[project.scripts]
+chouka = "chouka.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["chouka*"]
