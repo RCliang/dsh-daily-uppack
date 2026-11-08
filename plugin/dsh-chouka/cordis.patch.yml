@@ -1,0 +1,13 @@
+# dsh-chouka —— bundle 自带的挂载声明
+# 装上后 profile 的 dsh.profile.bundles 列出本包名即生效，不改 profile 自己的 patch 层。
+# 默认「发布模式」：引擎用包里自带的 engine/，用户数据落在 ~/.dsh/chouka/（首次自动播种示例卡池）。
+# 配置都可留空：
+#   repoPath   开发模式：指向抽卡引擎仓库根（含 chouka/、data/），配置后引擎和数据都用仓库那份
+#   pythonPath 跑引擎的解释器（>= 3.10）；留空则自动探测 python3 / python / py -3
+- insert:
+    - id: chouka
+      name: dsh-chouka
+      config:
+        enabled: true
+        repoPath: null
+        pythonPath: null

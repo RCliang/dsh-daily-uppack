@@ -1,0 +1,53 @@
+{
+  "name": "dsh-chouka",
+  "version": "0.2.6",
+  "description": "今日抽卡：本地抽卡引擎（午饭 / B站精选两副牌）+ 炉石式开包面板 + 可选的高德附近候选自动入池。",
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "gacha",
+    "lunch",
+    "bilibili"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://gitee.com/betterdl/dsh-daily-uppack.git",
+    "directory": "plugin/dsh-chouka"
+  },
+  "license": "MIT",
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "index.js",
+    "client.js",
+    "runner.py",
+    "cordis.patch.yml",
+    "engine",
+    "locate.swift",
+    "locate-win.ps1",
+    "LICENSE",
+    "README.md"
+  ],
+  "engines": {
+    "dsh": ">=0.1.7-rc.1",
+    "node": ">=20"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-runtime",
+        "@deepseek-ai/dsh-client-ui-sidebar"
+      ]
+    }
+  }
+}

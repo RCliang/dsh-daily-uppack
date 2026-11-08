@@ -23,7 +23,7 @@ _BV = re.compile(r"^BV[0-9A-Za-z]{10}$")
 _DATE = re.compile(r"\d{4}-\d{2}-\d{2}")
 _BLOCK = re.compile(r"\n(?=###\s*BV)")
 _URL = re.compile(r"https://www\.bilibili\.com/video/(BV[0-9A-Za-z]+)/?")
-_PLAY = re.compile(r"播放\s*([0-9]+(?:\.[0-9]+)?万?)")
+_PLAY = re.compile(r"播放\s*[：:]?\s*([0-9]+(?:\.[0-9]+)?[万亿]?)")
 _TIER = re.compile(r"(值得看|可以看|不值当)")
 _DURATION = re.compile(r"(\d+(?:\.\d+)?)\s*(小时|分半|分钟|分)")
 _SKIPPED = re.compile(r"跳过|跳了|没挑")
@@ -35,6 +35,7 @@ _LABELS = (
     ("档位", "tier"),
     ("标题", "title"),
     ("UP", "up"),
+    ("播放量", "play"),
 )
 _STOP = ("其余", "因无字幕", "本轮", "总结", "跳过的", "还没发过")
 
@@ -182,7 +183,7 @@ def _fields(text: str) -> dict:
         data["url"] = url.group(0).rstrip("/")
     up_line = data.get("up_line") or ""
     play = _PLAY.search(up_line)
-    if play:
+    if play and not data.get("play"):
         data["play"] = play.group(1).replace(" ", "")
     data.pop("up_line", None)
     return data

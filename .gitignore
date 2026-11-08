@@ -3,3 +3,7 @@ __pycache__/
 .pytest_cache/
 data/draws.jsonl
 *.tmp
+*.tgz
+.agent-mem/
+.hallmark/
+.playwright-mcp/

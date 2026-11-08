@@ -52,5 +52,7 @@ def update_draw(path: Path, draw_id: str, mutate) -> dict:
 
 def _atomic_write(path: Path, text: str) -> None:
     tmp = path.with_suffix(path.suffix + ".tmp")
-    tmp.write_text(text, encoding="utf-8", newline="\n")
+    # write_text() 的 newline 参数要 3.10；用 open() 让 3.7 也能跑
+    with tmp.open("w", encoding="utf-8", newline="\n") as handle:
+        handle.write(text)
     tmp.replace(path)
