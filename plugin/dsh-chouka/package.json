@@ -1,6 +1,6 @@
 {
   "name": "dsh-chouka",
-  "version": "0.2.6",
+  "version": "0.3.0",
   "description": "今日抽卡：本地抽卡引擎（午饭 / B站精选两副牌）+ 炉石式开包面板 + 可选的高德附近候选自动入池。",
   "keywords": [
     "dsh",
@@ -29,6 +29,7 @@
     "runner.py",
     "cordis.patch.yml",
     "engine",
+    "skill",
     "locate.swift",
     "locate-win.ps1",
     "LICENSE",

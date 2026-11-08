@@ -57,6 +57,24 @@ const safe = (v) => {
 
 export function apply(ctx, config) {
   const cfg = config || {}
+
+  // 播种 skill 到用户全局目录（~/.dsh/skills，rank 400）：装了插件的所有会话开箱即用。
+  // 内容有变化就覆盖（skill 正文每次加载都重读，无需失效缓存）。
+  try {
+    const skillSrc = join(pluginDir, 'skill', 'SKILL.md')
+    const skillDir = join(process.env.DSH_HOME || join(homedir(), '.dsh'), 'skills', 'chouka-lunch-collect')
+    if (existsSync(skillSrc)) {
+      const want = readFileSync(skillSrc, 'utf8')
+      const dst = join(skillDir, 'SKILL.md')
+      let current = ''
+      try { current = readFileSync(dst, 'utf8') } catch { /* 还没播种 */ }
+      if (current !== want) {
+        mkdirSync(skillDir, { recursive: true })
+        writeFileSync(dst, want, 'utf8')
+        try { ctx.logger?.info?.('[chouka] skill 已播种：~/.dsh/skills/chouka-lunch-collect') } catch { /* 忽略 */ }
+      }
+    }
+  } catch { /* skill 播种失败不影响插件本体 */ }
   const repo = String(cfg.repoPath || '').trim()
   const repoValid = repo && existsSync(join(repo, 'chouka', 'engine.py'))
   const bundled = join(pluginDir, 'engine', 'chouka', 'engine.py')
@@ -199,6 +217,30 @@ export function apply(ctx, config) {
       },
       async execute(args) {
         return callEngine({ op: 'mark', draw_id: String(args?.draw_id || ''), result: String(args?.result || '') })
+      },
+    })
+
+    registerOne({
+      name: 'chouka_add_lunch',
+      description: '往午饭卡池加一张牌（人工确认过的真实选项）。典型用法：用户在 IM 里发餐厅照片 + 文字说明（标签/预算/步行时间），'
+        + '你从照片认出店名和菜品、按文字补全属性后调用。同名已存在会报错；budget 未知可省略（默认 25）。',
+      parameters: {
+        name: { type: 'string', description: '店名或菜品名（卡牌标题），如「老乡鸡(阳光天地店)」', required: true },
+        tags: { type: 'string', description: '类型标签，逗号分隔，如 "清淡" 或 "荤,重口"', required: true },
+        notes: { type: 'string', description: '备注：来源、推荐菜、照片里的补充信息等' },
+        budget: { type: 'number', description: '预算（元）；不知道就别传，占位 25' },
+        walk_minutes: { type: 'number', description: '步行分钟数' },
+      },
+      async execute(args) {
+        const tags = String(args?.tags || '').split(/[,，、]/).map((s) => s.trim()).filter(Boolean)
+        return callEngine({
+          op: 'add_lunch',
+          name: String(args?.name || '').slice(0, 40),
+          tags,
+          notes: String(args?.notes || ''),
+          budget: args?.budget != null ? Number(args.budget) : 25,
+          walk_minutes: args?.walk_minutes != null ? Number(args.walk_minutes) : 10,
+        })
       },
     })
   }
